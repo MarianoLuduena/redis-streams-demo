@@ -1,0 +1,18 @@
+spring:
+  redis:
+    host: localhost
+    port: 6379
+    password:
+    ssl: false
+    timeout: 10s
+    database: 0
+
+management.health.redis.enabled: true
+
+spring-redis-streams-consumer:
+  transaction-repository:
+    stream-name: transactions
+    consumer-group: demo_group
+    consumer-id: demo_consumer_1
+  process-transaction:
+    max-work-delay: 1000

@@ -1,0 +1,24 @@
+spring:
+  application:
+    name: spring-redis-streams-cleaner
+  redis:
+    host: ${REDIS_HOST}
+    port: ${REDIS_PORT}
+    password: ${REDIS_PASSWORD}
+    ssl: ${REDIS_SSL}
+    timeout: ${REDIS_TIMEOUT}
+    database: ${REDIS_DATABASE}
+  task:
+    scheduling:
+      shutdown:
+        await-termination-period: ${TASK_SCHEDULING_AWAIT_TERMINATION_PERIOD}
+        await-termination: ${TASK_SCHEDULING_AWAIT_TERMINATION}
+
+management.health.redis.enabled: ${REDIS_HEALTHCHECK_ENABLED}
+
+spring-redis-streams-cleaner:
+  transaction-repository:
+    stream-name: ${TRANSACTION_REPOSITORY_STREAM_NAME}
+  transaction-scheduler:
+    max-length: ${TRANSACTION_SCHEDULER_TRANSACTIONS_MAX_LENGTH}
+    cron: ${TRANSACTION_SCHEDULER_CRON_EXPRESSION}

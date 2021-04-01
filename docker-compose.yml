@@ -1,0 +1,120 @@
+version: "3.5"
+
+services:
+
+  producer:
+    build: ./spring-redis-streams-producer
+    image: spring-redis-streams-producer:latest
+    env_file:
+      - redis.env
+    environment:
+      TASK_SCHEDULING_AWAIT_TERMINATION_PERIOD: 20s
+      TASK_SCHEDULING_AWAIT_TERMINATION: "true"
+      TRANSACTION_SCHEDULER_CRON_EXPRESSION: "*/1 * * * * *"
+    ports:
+      - "8080"
+    deploy:
+      resources:
+        limits:
+          cpus: '0.30'
+          memory: 384M
+        reservations:
+          memory: 384M
+      mode: replicated
+      replicas: 1
+    links:
+      - redis
+    depends_on:
+      - redis
+
+  consumer-1:
+    build: ./spring-redis-streams-consumer
+    image: spring-redis-streams-consumer:latest
+    env_file:
+      - redis.env
+    environment:
+      TRANSACTION_REPOSITORY_CONSUMER_ID: consumer-1
+      PROCESS_TRANSACTION_MAX_WORK_DELAY: 2000
+    ports:
+      - "8080"
+    deploy:
+      resources:
+        limits:
+          cpus: '0.30'
+          memory: 384M
+        reservations:
+          memory: 384M
+      mode: replicated
+      replicas: 1
+    links:
+      - redis
+    depends_on:
+      - redis
+      - producer
+
+  consumer-2:
+    image: spring-redis-streams-consumer:latest
+    env_file:
+      - redis.env
+    environment:
+      TRANSACTION_REPOSITORY_CONSUMER_ID: consumer-2
+      PROCESS_TRANSACTION_MAX_WORK_DELAY: 4000
+    ports:
+      - "8080"
+    deploy:
+      resources:
+        limits:
+          cpus: '0.30'
+          memory: 384M
+        reservations:
+          memory: 384M
+      mode: replicated
+      replicas: 1
+    links:
+      - redis
+    depends_on:
+      - redis
+      - producer
+      - consumer-1
+
+  cleaner:
+    build: ./spring-redis-streams-cleaner
+    image: spring-redis-streams-cleaner:latest
+    env_file:
+      - redis.env
+    environment:
+      TASK_SCHEDULING_AWAIT_TERMINATION_PERIOD: 20s
+      TASK_SCHEDULING_AWAIT_TERMINATION: "true"
+      TRANSACTION_SCHEDULER_TRANSACTIONS_MAX_LENGTH: 20
+      TRANSACTION_SCHEDULER_CRON_EXPRESSION: "*/30 * * * * *"
+    ports:
+      - "8080"
+    deploy:
+      resources:
+        limits:
+          cpus: '0.30'
+          memory: 384M
+        reservations:
+          memory: 384M
+      mode: replicated
+      replicas: 1
+    links:
+      - redis
+    depends_on:
+      - redis
+      - producer
+
+  redis:
+    container_name: redis_streams
+    image: redis:6-alpine
+    ports:
+      - "6380:6379"
+    deploy:
+      resources:
+        limits:
+          cpus: '0.10'
+          memory: 128M
+        reservations:
+          memory: 128M
+      mode: replicated
+      replicas: 1
